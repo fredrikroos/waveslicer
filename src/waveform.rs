@@ -1,15 +1,15 @@
-use std::fs::File;
 use simplemad::{Decoder, Frame, SimplemadError};
+use std::fs::File;
 use std::time::Duration;
 
 pub struct Waveform {
     pub data: Vec<i32>,
-    pub length: Duration
+    pub length: Duration,
 }
 
 pub enum Error {
     MadError(SimplemadError),
-    IOError(std::io::Error)
+    IOError(std::io::Error),
 }
 
 pub fn generate(filename: &str, width: u32) -> Result<Waveform, Error> {
@@ -22,11 +22,11 @@ pub fn generate(filename: &str, width: u32) -> Result<Waveform, Error> {
     let num_channels = valid_frames[0].samples.len() as f32;
     let duration_per_sample = Duration::new(0, 1000000000 / sample_rate);
 
-    let duration : Duration = valid_frames.iter().map(|f| f.duration).sum();
+    let duration: Duration = valid_frames.iter().map(|f| f.duration).sum();
     let duration_per_slice = duration / width;
 
     let mut data = Vec::with_capacity(width as usize);
-    let mut current_time = Duration::new(0,0);
+    let mut current_time = Duration::new(0, 0);
     let mut min = 0.0f32;
     let mut max = 0.0f32;
     let mut current_slice_end = duration_per_slice;
@@ -45,16 +45,24 @@ pub fn generate(filename: &str, width: u32) -> Result<Waveform, Error> {
                 current_slice_end += duration_per_slice;
             }
             // sum channels
-            let value = frame.samples.iter().map(|ch| ch[sample].to_f32()).sum::<f32>() / num_channels;
+            let value = frame
+                .samples
+                .iter()
+                .map(|ch| ch[sample].to_f32())
+                .sum::<f32>()
+                / num_channels;
             min = min.min(value);
             max = max.max(value);
         }
     }
 
-    let scaled = data.into_iter().map(|sample| (sample * 127.0) as i32).collect();
+    let scaled = data
+        .into_iter()
+        .map(|sample| (sample * 127.0) as i32)
+        .collect();
 
     Ok(Waveform {
         data: scaled,
-        length: duration
+        length: duration,
     })
 }
